@@ -6,13 +6,14 @@
 '
 ' brightness levels:
 '   0 -> end of frame
-'   1 -> end of current vector list
+'   1 -> Move - no pen
 '   2 -> normal
 '   3 -> bright
 
 controls = WaitForFrame(JoystickNone, Controller2, JoystickNone)
 ' anythinmg bigger than this will crash anyhow :)
 max_vlist = 1024
+max_sprite = 64
 dim vector_list[max_vlist,3]
 vlist_pos = 1
 
@@ -30,8 +31,8 @@ while controls[1,3] = 0
   b2 = fgetc(Stdin)
   b3 = fgetc(Stdin)
   combined = b1*65536 + b2*256 + b3
-  print "got :"+b1+":"+b2+":"+b3
-  print "combined is "+combined
+'  print "got :"+b1+":"+b2+":"+b3
+'  print "combined is "+combined
   ' bitshift ops?
   ' >> 22
   brightness = combined / 4194304
@@ -44,30 +45,53 @@ while controls[1,3] = 0
 
   ' frame end - draw everything out
   if brightness = 0 or new_frame
+    call clearscreen()
     if vlist_pos > 1
+      csprite = 1
       ' form a lines sprite
-      dim my_lines[vlist_pos - 1, 3]
+      dim my_lines[max_sprite, 3]
       for i = 1 to (vlist_pos - 1)
-        if brightness = 1
-          my_lines[i, 1] = MoveTo
+        if vector_list[i, 3] = 1
+          my_lines[csprite, 1] = MoveTo
         else
-          my_lines[i, 1] = DrawTo
+          my_lines[csprite, 1] = DrawTo
         endif
-        my_lines[i, 2] = vector_list[i, 1]
-        my_lines[i, 3] = vector_list[i, 2]
+        my_lines[csprite, 2] = vector_list[i, 1]
+        my_lines[csprite, 3] = vector_list[i, 2]
+        csprite = csprite + 1
+        ' do a reset if we hit our origin
+        if csprite > max_sprite
+          dim my_lines_copy[max_sprite, 3]
+          call ReturnToOriginSprite()
+          call LinesSprite(my_lines)
+          print "Adding "+my_lines
+          my_lines_copy[1, 1] = MoveTo
+          my_lines_copy[1, 2] = my_lines[csprite, 2] 
+          my_lines_copy[1, 3] = my_lines[csprite, 3]
+          my_lines = my_lines_copy
+          csprite = 2
+        endif
       next
-      ' start with a MoveTo
-      my_lines[1, 1] = MoveTo
+
+      print "csprite is "+csprite
+      ' copy to new array and place the remainder
       call ReturnToOriginSprite()
-      call LinesSprite(my_lines)
+      dim worklines[csprite - 1, 3]
+      for i = 1 to (csprite - 1)
+        worklines[i, 1] = my_lines[i, 1]
+        worklines[i, 2] = my_lines[i, 2]
+        worklines[i, 3] = my_lines[i, 3]
+      next
+      call LinesSprite(worklines)
+      print "Adding "+worklines
+
       controls = WaitForFrame(JoystickNone, Controller2, JoystickNone)
-      call clearscreen()
       vlist_pos = 1
     endif
   endif
 
   ' lets clamp to max 128 vectors for now...
-  if brightness > 0 and vlist_pos < 128
+  if brightness > 0 and vlist_pos < max_vlist
     ' clamp to (256, 256)
     xpos = xpos / 8
     ypos = ypos / 8
