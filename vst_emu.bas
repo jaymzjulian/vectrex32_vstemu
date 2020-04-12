@@ -41,7 +41,7 @@ while controls[1,3] = 0
   ' & 2048
   xpos = combined & 2047
 
-  print "bright: "+brightness+" xp: "+xpos+" yp: "+ypos 
+'  print "bright: "+brightness+" xp: "+xpos+" yp: "+ypos 
 
   ' frame end - draw everything out
   if brightness = 0 or new_frame
@@ -64,7 +64,7 @@ while controls[1,3] = 0
           dim my_lines_copy[max_sprite, 3]
           call ReturnToOriginSprite()
           call LinesSprite(my_lines)
-          print "Adding "+my_lines
+'          print "Adding "+my_lines
           my_lines_copy[1, 1] = MoveTo
           my_lines_copy[1, 2] = my_lines[csprite, 2] 
           my_lines_copy[1, 3] = my_lines[csprite, 3]
@@ -73,7 +73,7 @@ while controls[1,3] = 0
         endif
       next
 
-      print "csprite is "+csprite
+'      print "csprite is "+csprite
       ' copy to new array and place the remainder
       call ReturnToOriginSprite()
       dim worklines[csprite - 1, 3]
@@ -83,7 +83,7 @@ while controls[1,3] = 0
         worklines[i, 3] = my_lines[i, 3]
       next
       call LinesSprite(worklines)
-      print "Adding "+worklines
+'      print "Adding "+worklines
 
       controls = WaitForFrame(JoystickNone, Controller2, JoystickNone)
       vlist_pos = 1
