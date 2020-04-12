@@ -39,25 +39,39 @@ vlist_pos = 1
 
 while controls[1,3] = 0
   ' this is horribly inefficient
-  ' data comes in MSB first, 24 bits
+  ' data comes in MSB first, 24 bits (32bits in v2 protocol)
   new_frame = false
-  b1 = 0
-  while b1 = 0
+  syncing = true
+  while syncing
     b1 = fgetc(Stdin)
-    if b1 = 0
-      new_frame = true
+    b2 = fgetc(Stdin)
+    b3 = fgetc(Stdin)
+    if protocol_version = 2
+      b4 = fgetc(Stdin)
+    else
+      b4 = 0
+    endif
+
+    ' more than 3 zeros in a row is a sync
+    ' these should ONLY happen at frame beginning, so we debug output if that's not the
+    ' case
+    if b1=0 and b2=0 and b3=0
+      if vlist_pos != 1
+        print "SYNC @ "+vlist_pos
+      endif
+      syncing = true
+      while fgetc(Stdin) = 0
+        ' do nothing while we read 0s
+      endwhile
+    else
+      ' otherwise, we got good data, and we are not syncing!
+      syncing = false
     endif
   endwhile
-  b2 = fgetc(Stdin)
-  b3 = fgetc(Stdin)
-  if protocol_version = 2
-    b4 = fgetc(Stdin)
-  else
-    b4 = 0
-  endif
+
   if protocol_version = 1
     combined = b1*65536 + b2*256 + b3
-    print "got :"+b1+":"+b2+":"+b3
+    'print "got :"+b1+":"+b2+":"+b3
   '  print "combined is "+combined
     ' bitshift ops?
     ' >> 22
@@ -76,11 +90,19 @@ while controls[1,3] = 0
     xpos = combined & 4095
   endif
 
-  'print "command: "+command+"bright: "+brightness+" xp: "+xpos+" yp: "+ypos 
+  ' this is universal between protocols, so lets just force it!
+  if b1 = 1 and b2 = 1 and b3 = 1
+    new_frame = true
+  endif
+
+  'if command != 2
+  '  print "got :"+b1+":"+b2+":"+b3+":"+b4
+  '  print "command: "+command+"bright: "+brightness+" xp: "+xpos+" yp: "+ypos 
+  'endif
 
 if display_enabled
   ' frame end - draw everything out
-  if (brightness = 0 and protocol_version = 1) or (command = 0 and protocol_version = 2) or new_frame
+  if new_frame
     print "FRAME with "+vlist_pos+" vectors"
     call clearscreen()
     if vlist_pos > 1
