@@ -13,7 +13,9 @@ data=[ [2,0,0],
        [2,0,0]]
 
 serialport.write(bytearray([0,0,0,0,0]))
-while True:
+loop = 0
+while loop == 0:
+  loop = 0
   for d in data:
     combined = d[0]<<22 
     combined |= d[1]<<11
