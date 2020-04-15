@@ -37,6 +37,8 @@ max_sprite = 64
 dim vector_list[max_vlist,3]
 vlist_pos = 1
 
+call SetFrameRate(200)
+
 while controls[1,3] = 0
   ' this is horribly inefficient
   ' data comes in MSB first, 24 bits (32bits in v2 protocol)

@@ -1,6 +1,7 @@
 
 import serial
 import sys
+import time
 
 #serialPort=serial.Serial(port="/dev/ttyS3", baudrate=115200, bytesize=8, timeout=2, stopbits=serial.STOPBITS_ONE)
 serialport=serial.Serial(sys.argv[1])
@@ -24,5 +25,6 @@ while loop == 0:
                           ((combined >> 8) & 255),
                           ((combined >> 0) & 255)])
     serialport.write(command)
+    time.sleep(0.01)
   serialport.write(bytearray([1,1,1,0,0,0]))
 
